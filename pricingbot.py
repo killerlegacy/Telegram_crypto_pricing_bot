@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import logging
 import html
 import json
@@ -26,7 +28,9 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-DEVELOPER_CHAT_ID = 1234567890
+load_dotenv()
+
+DEVELOPER_CHAT_ID = os.getenv('Developer_chat_id')
 
 # Define a list of cryptocurrency symbols
 crypto_symbols = ["BTC", "ETH", "USDT", "BNB", "XRP", "USDC", "DOGE", "LTC"]
@@ -50,7 +54,7 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     crypto = query.data
     # crypto = context.args[0] 
     # Define your API Key
-    api_key = 'Your Coincap api-key'
+    api_key = os.getenv('apt_key')
 
     # Construct the API URL for a specific cryptocurrency (e.g., Bitcoin)
     url = (f'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={crypto}')
@@ -112,7 +116,7 @@ def main() -> None:
     # Create the Application and pass it your bot's token.
     application = (
         Application.builder()
-        .token("Your Token")
+        .token(os.getenv('Bot_Token'))
         .persistence(persistence)
         .arbitrary_callback_data(True)
         .build()
