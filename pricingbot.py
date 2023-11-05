@@ -3,19 +3,11 @@ from dotenv import load_dotenv
 import logging
 import html
 import json
-import logging
 import traceback
 from typing import List, Tuple, cast
 from telegram.constants import ParseMode
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ReplyKeyboardRemove
-from telegram.ext import (
-    Application,
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    InvalidCallbackData,
-    PicklePersistence,
-)
+from telegram import *
+from telegram.ext import *
 import requests
 import time
 
@@ -107,6 +99,68 @@ async def bad_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     """Raise an error to trigger the error handler."""
     await context.bot.wrong_method_name()  # type: ignore[attr-defined]
 
+async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send the alarm message."""
+    job = context.job
+    api_key = api_key_org
+
+    # Construct the API URL for a specific cryptocurrency (e.g., Bitcoin)
+    url = (f'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={job.data[1]}')
+
+    # Include your API Key in the custom header
+    headers = {'X-CMC_PRO_API_KEY': api_key}
+
+    # Make the HTTP GET request
+    r = requests.get(url, headers=headers)
+    data = r.json()
+    coin = data['data'][job.data[1]]['slug']
+    price = data['data'][job.data[1]]['quote']['USD']['price']
+    price = round(price,2)
+    await context.bot.send_message(job.chat_id, text=f"Beep! The price of {job.data[1]} is ${price}")
+
+
+def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Remove job with given name. Returns whether job was removed."""
+    current_jobs = context.job_queue.get_jobs_by_name(name)
+    if not current_jobs:
+        return False
+    for job in current_jobs:
+        job.schedule_removal()
+    return True
+
+
+async def set_timer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Add a job to the queue."""
+    chat_id = update.effective_message.chat_id
+    try:
+        # args[0] should contain the time for the timer in seconds
+        due = float(context.args[0])
+        #convert minute into seconds
+        due = due*60
+        crypto = context.args[1]
+        if due < 0:
+            await update.effective_message.reply_text("Sorry we can not go back to future!")
+            return
+
+        job_removed = remove_job_if_exists(str(chat_id), context)
+        context.job_queue.run_repeating(alarm, due, chat_id=chat_id, name=str(chat_id), data=[due,crypto])
+
+        text = f"Time set! You will get Update after every {context.args[0]} minute. To cancel use /unset command"
+        if job_removed:
+            text += " Old one was removed."
+        await update.effective_message.reply_text(text)
+
+    except (IndexError, ValueError):
+        await update.effective_message.reply_text("Usage: /set <minutes> <Crypto symbol>")
+
+
+async def unset(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Remove the job if the user changed their mind."""
+    chat_id = update.message.chat_id
+    job_removed = remove_job_if_exists(str(chat_id), context)
+    text = "Timer successfully cancelled!" if job_removed else "You have no active timer."
+    await update.message.reply_text(text)
+
 
 
 def main() -> None:
@@ -116,7 +170,7 @@ def main() -> None:
     # Create the Application and pass it your bot's token.
     application = (
         Application.builder()
-        .token(os.getenv('Bot_Token'))
+        .token(os.getenv('Bot_Token')).read_timeout(7).get_updates_read_timeout(42)
         .persistence(persistence)
         .arbitrary_callback_data(True)
         .build()
@@ -127,6 +181,8 @@ def main() -> None:
     application.add_handler(CommandHandler("add", join))
     application.add_handler(CommandHandler("bad_command", bad_command))
     application.add_handler(CallbackQueryHandler(price))
+    application.add_handler(CommandHandler("set", set_timer))
+    application.add_handler(CommandHandler("unset", unset))
     application.add_error_handler(error_handler)
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
