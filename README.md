@@ -1,16 +1,44 @@
-# Telegram_crypto_pricing_bot
-This Telegram bot update the price of top trending crypto currency in one click.
+# Telegram Crypto Pricing Bot
 
-1. First you have to create a telegram bot from botfather and get the  token of your bot.
+This Telegram bot provides real-time updates on the prices of top trending cryptocurrencies in just one click. Follow the steps below to set up and run the bot:
 
-2. Now create an account in coincap market api and get the api-key details from their.
+## Setup Instructions:
 
-3. Open pricingbot.py and replace your bot token and api key in the script.
+### 1. Create a Telegram Bot:
 
-4. Install all the requirements from requirements.txt file.
+   - Start by creating a Telegram bot using BotFather on Telegram.
+   - Obtain the token for your bot.
 
-5. Run the pricingbot.py and start your bot test it and if you think it needs any improvement than you
-are good to go.
+### 2. Get CoinCap Market API Key:
 
-NOTE: If telegram is ban in your country then use VPN or try any cloud hosting to run your application.
-Thanks me later
+   - Create an account on CoinCap Market API and obtain your API key.
+
+### 3. Update Bot Token and API Key:
+
+   - Open the `.env` file.
+   - Replace the values with your Telegram bot token and CoinCap API key.
+
+### 4. Install Requirements:
+
+   - Install the required packages by running the following command in your terminal or command prompt:
+
+     ```
+     pip install -r requirements.txt
+     ```
+
+### 5. Run the Bot:
+
+   - Execute the `pricingbot.py` script.
+   - Start your Telegram bot and test its functionality.
+   - If you identify any areas for improvement, feel free to make the necessary adjustments.
+
+### Note:
+
+- **VPN Usage:**
+  If Telegram is banned in your country, use a VPN to access the platform or consider utilizing a cloud hosting service to run your application.
+
+**Thank me later!**
+
+## Disclaimer:
+
+This project assumes basic knowledge of Python and Telegram bot creation. Ensure you comply with Telegram's terms of service and the regulations of the CoinCap Market API. Use the bot responsibly, and be aware of any legal restrictions in your region.
